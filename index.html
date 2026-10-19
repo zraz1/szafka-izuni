@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IZUNIA - Poukładaj swoje pudełka!</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-dark: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding-bottom: 30px;
+        }
+
+        header {
+            width: 100%;
+            background: linear-gradient(135deg, #312e81, #1e1b4b);
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border-bottom: 2px solid #6366f1;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: #fbbf24;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            font-size: 0.95rem;
+            color: #e0e7ff;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 10px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .status-bar {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 850px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .progress-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: bold;
+        }
+
+        .progress-bar-bg {
+            width: 140px;
+            height: 14px;
+            background: #334155;
+            border-radius: 7px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.3s ease;
+        }
+
+        .timer-box {
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: #38bdf8;
+            font-weight: bold;
+        }
+
+        .workspace {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .cabinet-container {
+            position: relative;
+            width: 100%;
+            max-width: 750px;
+            height: 480px;
+            background-color: #1e293b;
+            background-size: cover;
+            background-position: center;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+            border: 4px solid #475569;
+            overflow: hidden;
+        }
+
+        /* Siatka półek dopasowana do zdjęcia */
+        .shelf-grid {
+            position: absolute;
+            top: 25%;
+            left: 7%;
+            width: 72%;
+            height: 50%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(2px);
+            border-radius: 8px;
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+        }
+
+        .shelf-slot {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .shelf-slot.hovered {
+            background: rgba(59, 130, 246, 0.4);
+            border-color: #60a5fa;
+            transform: scale(1.02);
+        }
+
+        .shelf-slot.occupied {
+            border-style: solid;
+            border-color: rgba(16, 185, 129, 0.6);
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .boxes-area {
+            flex: 1;
+            min-width: 280px;
+            max-width: 300px;
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .boxes-area h2 {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            border-bottom: 1px solid #475569;
+            padding-bottom: 8px;
+            text-align: center;
+        }
+
+        .box-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: grab;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            touch-action: none;
+        }
+
+        .box-item:active {
+            cursor: grabbing;
+        }
+
+        .box-icon {
+            font-size: 1.2rem;
+        }
+
+        .c1 { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .c2 { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .c3 { background: linear-gradient(135deg, #10b981, #047857); }
+        .c4 { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+        .c5 { background: linear-gradient(135deg, #6366f1, #4338ca); }
+        .c6 { background: linear-gradient(135deg, #ec4899, #be185d); }
+        .c7 { background: linear-gradient(135deg, #a855f7, #6b21a8); }
+        .c8 { background: linear-gradient(135deg, #f43f5e, #be123c); }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .certificate {
+            background: #ffffff;
+            color: #1e293b;
+            padding: 35px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            border: 6px double #fbbf24;
+        }
+
+        .certificate h2 {
+            font-size: 1.7rem;
+            color: #1e1b4b;
+            margin-bottom: 5px;
+        }
+
+        .certificate h3 {
+            font-size: 1rem;
+            color: #d97706;
+            margin-bottom: 15px;
+        }
+
+        .cert-body {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #334155;
+        }
+
+        .cert-recipient {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #4f46e5;
+            margin: 8px 0;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📦 IZUNIA, PRZYJECHAŁY MEBLE! 📦</h1>
+        <p class="subtitle">Nie ma Cię w pracy, a szafa czeka! Poukładaj swoje pudełka na półkach!</p>
+    </header>
+
+    <div class="main-container">
+        <div class="status-bar">
+            <div class="progress-box">
+                <span>Pudełkometr:</span>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+                <span id="progressText">0/8</span>
+            </div>
+            <div class="timer-box" id="timer">Czas: 00:00</div>
+        </div>
+
+        <div class="workspace">
+            <div class="cabinet-container" id="cabinet" style="background-image: url('szafa.jpg');">
+                <div class="shelf-grid">
+                    <div class="shelf-slot"></div>
+                    <div class="shelf-slot"></div>
+                    <div class="shelf-slot"></div>
+                    <div class="shelf-slot"></div>
+                    <div class="shelf-slot"></div>
+                    <div class="shelf-slot"></div>
+                    <div class="shelf-slot"></div>
+                    <div class="shelf-slot"></div>
+                </div>
+            </div>
+
+            <div class="boxes-area" id="boxesArea">
+                <h2>Pudełka Izuni (8)</h2>
+                <div class="box-item c1" draggable="true" id="box1"><span class="box-icon">🍬</span><span>Tajne Przekąski</span></div>
+                <div class="box-item c2" draggable="true" id="box2"><span class="box-icon">📎</span><span>Spinacze i Papier</span></div>
+                <div class="box-item c3" draggable="true" id="box3"><span class="box-icon">☕</span><span>Kawa i Kubki</span></div>
+                <div class="box-item c4" draggable="true" id="box4"><span class="box-icon">📁</span><span>Ważne Dokumenty</span></div>
+                <div class="box-item c5" draggable="true" id="box5"><span class="box-icon">🔮</span><span>Rzeczy "Przyda się"</span></div>
+                <div class="box-item c6" draggable="true" id="box6"><span class="box-icon">🎧</span><span>Kable i Ładowarki</span></div>
+                <div class="box-item c7" draggable="true" id="box7"><span class="box-icon">👗</span><span>Ubrania</span></div>
+                <div class="box-item c8" draggable="true" id="box8"><span class="box-icon">🌸</span><span>Pachnidła</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="certificate">
+            <h2>Certyfikat Przekazania</h2>
+            <h3>Oficjalny Odbiór Mebli Biurowych</h3>
+            <div class="cert-body">
+                Zaświadcza się, że:
+                <div class="cert-recipient">IZUNIA</div>
+                pomyślnie poukładała swoje osobiste pudełka na nowych półkach w czasie <strong id="finalTime">00:00</strong>.
+                <br><br>
+                Szafa została odebrana! Zespół może iść na kawę! ☕
+            </div>
+            <button class="btn" onclick="restartGame()">Zagraj jeszcze raz</button>
+        </div>
+    </div>
+
+    <script>
+        let totalBoxes = 8;
+        let placedBoxes = 0;
+        let timerSeconds = 0;
+        let timerInterval = null;
+        let timerStarted = false;
+
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const timerEl = document.getElementById('timer');
+        const slots = document.querySelectorAll('.shelf-slot');
+        const boxes = document.querySelectorAll('.box-item');
+
+        function startTimer() {
+            if (timerStarted) return;
+            timerStarted = true;
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+                const secs = String(timerSeconds % 60).padStart(2, '0');
+                timerEl.textContent = `Czas: ${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        boxes.forEach(box => {
+            box.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', box.id);
+                startTimer();
+            });
+        });
+
+        slots.forEach(slot => {
+            slot.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!slot.classList.contains('occupied')) {
+                    slot.classList.add('hovered');
+                }
+            });
+
+            slot.addEventListener('dragleave', () => {
+                slot.classList.remove('hovered');
+            });
+
+            slot.addEventListener('drop', (e) => {
+                e.preventDefault();
+                slot.classList.remove('hovered');
+                const boxId = e.dataTransfer.getData('text/plain');
+                const box = document.getElementById(boxId);
+                if (box && !slot.classList.contains('occupied')) {
+                    dropBoxIntoSlot(box, slot);
+                }
+            });
+        });
+
+        function dropBoxIntoSlot(box, slot) {
+            slot.appendChild(box);
+            slot.classList.add('occupied');
+            box.style.margin = '0';
+            box.style.width = '100%';
+            box.style.height = '100%';
+            box.style.justifyContent = 'center';
+            box.setAttribute('draggable', 'false');
+            
+            placedBoxes++;
+            updateProgress();
+
+            if (placedBoxes === totalBoxes) {
+                completeGame();
+            }
+        }
+
+        function updateProgress() {
+            const pct = (placedBoxes / totalBoxes) * 100;
+            progressFill.style.width = pct + '%';
+            progressText.textContent = `${placedBoxes}/${totalBoxes}`;
+        }
+
+        function completeGame() {
+            stopTimer();
+            document.getElementById('finalTime').textContent = timerEl.textContent.replace('Czas: ', '');
+            setTimeout(() => {
+                document.getElementById('modalOverlay').classList.add('active');
+            }, 300);
+        }
+
+        function restartGame() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            placedBoxes = 0;
+            timerSeconds = 0;
+            timerStarted = false;
+            timerEl.textContent = 'Czas: 00:00';
+            updateProgress();
+
+            const boxesArea = document.getElementById('boxesArea');
+            slots.forEach(slot => {
+                slot.classList.remove('occupied');
+                slot.innerHTML = '';
+            });
+
+            boxes.forEach(box => {
+                box.setAttribute('draggable', 'true');
+                box.style.width = 'auto';
+                box.style.height = 'auto';
+                box.style.justifyContent = 'flex-start';
+                boxesArea.appendChild(box);
+            });
+        }
+    </script>
+</body>
+</html>
